@@ -12,39 +12,52 @@ func TestHTML2Text(t *testing.T) {
 		Convey("Links", func() {
 			So(HTML2Text(`<div></div>`), ShouldEqual, "")
 			So(HTML2Text(`<div>simple text</div>`), ShouldEqual, "simple text")
-			So(HTML2Text(`click <a href="test">here</a>`), ShouldEqual, "click test")
-			So(HTML2Text(`click <a class="x" href="test">here</a>`), ShouldEqual, "click test")
-			So(HTML2Text(`click <a href="ents/&apos;x&apos;">here</a>`), ShouldEqual, "click ents/'x'")
-			So(HTML2Text(`click <a href="javascript:void(0)">here</a>`), ShouldEqual, "click ")
-			So(HTML2Text(`click <a href="http://bit.ly/2n4wXRs">news</a>`), ShouldEqual, "click http://bit.ly/2n4wXRs")
+			So(HTML2Text(`click <a href="test">here</a> lalala`), ShouldEqual, "click here lalala")
+			So(HTML2Text(`click <a class="x" href="test">here</a>`), ShouldEqual, "click here")
+			So(HTML2Text(`click <a href="ents/&apos;x&apos;">here</a>`), ShouldEqual, "click here")
+			So(HTML2Text(`click <a href="javascript:void(0)">here</a>`), ShouldEqual, "click here")
+			So(HTML2Text(`click <a href="http://bit.ly/2n4wXRs">news</a>`), ShouldEqual, "click news")
+			So(HTML2Text(
+				`
+				<h2><span style="color: #4b67a1;">This is a demo</span> - <span style="color: #008000;">You can edit the text! <img src="/images/smiley.png" alt="laughing" /> &hearts;</span> </h2><p>Type in the <strong>visual editor</strong> on the left or the <strong>source editor</strong> on the right and see them both change in real time.</p><p>Set up the cleaning preferences below and click the <strong style="box-shadow: 3px 3px 3px #aaa; border-radius: 5px; padding: 0 5px; background-color: #2b3a56; color: #fff;"> Clean HTML</strong> button to clean the HTML source code.</p><!--This is just a comment above the table...--><table class="demoTable" cellpadding="10"><tbody><tr style="text-align: center;"></tr><tr><td colspan="3"><strong>Convert almost any document to clean HTML in three simple steps:</strong><ol><li>Paste the content of the Document in the editor</li><li>Click the Clean HTML (optional)</li><li>Copy the generated HTML code</li></ol></td></tr></tbody></table><p><strong><span style="color: #366691; font-size: 20px; text-shadow: 4px 10px 4px #888;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTML-Cleaner.com</span></strong></p><p>Please find below all the cleaning preferences, the Find And Replace tool, the Lorem-ipsum generator, the <a href="https://html-cleaner.com/case-converter/">Case Converter</a> and much more!</p><p>Don't forget to save this link into your bookmarks and share it with your friends.</p>
+				`),
+				ShouldEqual, "This is a demo - You can edit the text! ♥ Type in the visual editor on the left or the source editor on the right and see them both change in real time. Set up the cleaning preferences below and click the Clean HTML button to clean the HTML source code. Convert almost any document to clean HTML in three simple steps: Paste the content of the Document in the editor Click the Clean HTML (optional) Copy the generated HTML code       HTML-Cleaner.com Please find below all the cleaning preferences, the Find And Replace tool, the Lorem-ipsum generator, the Case Converter and much more! Don't forget to save this link into your bookmarks and share it with your friends.")
+			So(HTML2Text(
+				`
+				<h2><span style="color: #4b67a1;">This is a demo</span> - <span style="color: #008000;">You can edit the text! <img src="/images/smiley.png" alt="laughing" /> &hearts;</span></h2>
+				<p>Type in the <strong>visual editor</strong> on the left or the <strong>source editor</strong> on the right and see them both change in real time.</p>
+				<p>Set up the cleaning preferences below and click the <strong style="box-shadow: 3px 3px 3px #aaa; border-radius: 5px; padding: 0 5px; background-color: #2b3a56; color: #fff;"> Clean HTML</strong> button to clean the HTML source code.</p>
+				<!--This is just a comment above the table...-->
+				<table class="demoTable" cellpadding="10">
+				<tbody>
+				<tr style="text-align: center;">
+				<td><img src="/images/document-editors.png" alt="editors" /></td>
+				<td><img src="/images/cleaning-arrow.png" alt="cleaning" /></td>
+				<td><img src="/images/clean-html.png" alt="editors" width="86" height="122" /></td>
+				</tr>
+				<tr>
+				<td colspan="3"><strong>Convert almost any document to clean HTML in three simple steps:</strong>
+				<ol>
+				<li>Paste the content of the Document in the editor</li>
+				<li>Click the Clean HTML (optional)</li>
+				<li>Copy the generated HTML code</li>
+				</ol>
+				</td>
+				</tr>
+				</tbody>
+				</table>
+				<p><strong><span style="color: #366691; font-size: 20px; text-shadow: 4px 10px 4px #888;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTML-Cleaner.com</span></strong></p>
+				<p>Please find below all the cleaning preferences, the Find And Replace tool, the Lorem-ipsum generator, the <a href="https://html-cleaner.com/case-converter/">Case Converter</a> and much more!</p>
+				<p>Don't forget to save this link into your bookmarks and share it with your friends.</p>
+				`),
+				ShouldEqual,
+				"This is a demo - You can edit the text! ♥ Type in the visual editor on the left or the source editor on the right and see them both change in real time. Set up the cleaning preferences below and click the Clean HTML button to clean the HTML source code. Convert almost any document to clean HTML in three simple steps: Paste the content of the Document in the editor Click the Clean HTML (optional) Copy the generated HTML code       HTML-Cleaner.com Please find below all the cleaning preferences, the Find And Replace tool, the Lorem-ipsum generator, the Case Converter and much more! Don't forget to save this link into your bookmarks and share it with your friends.",
+			)
 		})
 
 		Convey("Inlines", func() {
 			So(HTML2Text(`strong <strong>text</strong>`), ShouldEqual, "strong text")
 			So(HTML2Text(`some <div id="a" class="b">div</div>`), ShouldEqual, "some div")
-		})
-
-		Convey("Line breaks and spaces", func() {
-			So(HTML2Text("should    ignore more spaces"), ShouldEqual, "should ignore more spaces")
-			So(HTML2Text("should \nignore \r\nnew lines"), ShouldEqual, "should ignore new lines")
-			So(HTML2Text("a\nb\nc"), ShouldEqual, "a b c")
-			So(HTML2Text(`two<br>line<br/>breaks`), ShouldEqual, "two\r\nline\r\nbreaks")
-			So(HTML2Text(`<p>two</p><p>paragraphs</p>`), ShouldEqual, "two\r\n\r\nparagraphs")
-		})
-
-		Convey("Headings", func() {
-			So(HTML2Text("<h1>First</h1>main text"), ShouldEqual, "First\r\n\r\nmain text")
-			So(HTML2Text("First<h2>Second</h2>next section"), ShouldEqual, "First\r\n\r\nSecond\r\n\r\nnext section")
-			So(HTML2Text("<h2>Second</h2>next section"), ShouldEqual, "Second\r\n\r\nnext section")
-			So(HTML2Text("Second<h3>Third</h3>next section"), ShouldEqual, "Second\r\n\r\nThird\r\n\r\nnext section")
-			So(HTML2Text("<h3>Third</h3>next section"), ShouldEqual, "Third\r\n\r\nnext section")
-			So(HTML2Text("Third<h4>Fourth</h4>next section"), ShouldEqual, "Third\r\n\r\nFourth\r\n\r\nnext section")
-			So(HTML2Text("<h4>Fourth</h4>next section"), ShouldEqual, "Fourth\r\n\r\nnext section")
-			So(HTML2Text("Fourth<h5>Fifth</h5>next section"), ShouldEqual, "Fourth\r\n\r\nFifth\r\n\r\nnext section")
-			So(HTML2Text("<h5>Fifth</h5>next section"), ShouldEqual, "Fifth\r\n\r\nnext section")
-			So(HTML2Text("Fifth<h6>Sixth</h6>next section"), ShouldEqual, "Fifth\r\n\r\nSixth\r\n\r\nnext section")
-			So(HTML2Text("<h6>Sixth</h6>next section"), ShouldEqual, "Sixth\r\n\r\nnext section")
-			So(HTML2Text("<h7>Not Header</h7>next section"), ShouldEqual, "Not Headernext section")
 		})
 
 		Convey("HTML entities", func() {
@@ -55,7 +68,6 @@ func TestHTML2Text(t *testing.T) {
 				ShouldEqual, "would you pay in ¢, £, ¥ or €?")
 			So(HTML2Text(`Tom & Jerry is not an entity`), ShouldEqual, "Tom & Jerry is not an entity")
 			So(HTML2Text(`this &neither; as you see`), ShouldEqual, "this &neither; as you see")
-			So(HTML2Text(`list of items<ul><li>One</li><li>Two</li><li>Three</li></ul>`), ShouldEqual, "list of items\r\nOne\r\nTwo\r\nThree\r\n")
 			So(HTML2Text(`fish &amp; chips`), ShouldEqual, "fish & chips")
 			So(HTML2Text(`&quot;I'm sorry, Dave. I'm afraid I can't do that.&quot; – HAL, 2001: A Space Odyssey`), ShouldEqual, "\"I'm sorry, Dave. I'm afraid I can't do that.\" – HAL, 2001: A Space Odyssey")
 			So(HTML2Text(`Google &reg;`), ShouldEqual, "Google ®")
@@ -75,15 +87,5 @@ func TestHTML2Text(t *testing.T) {
 			So(HTML2Text(`we are not <script type="javascript"></script>interested in scripts`),
 				ShouldEqual, "we are not interested in scripts")
 		})
-
-		Convey("Switching Unix and Windows line breaks", func() {
-			SetUnixLbr(true)
-			So(HTML2Text(`two<br>line<br/>breaks`), ShouldEqual, "two\nline\nbreaks")
-			So(HTML2Text(`<p>two</p><p>paragraphs</p>`), ShouldEqual, "two\n\nparagraphs")
-			SetUnixLbr(false)
-			So(HTML2Text(`two<br>line<br/>breaks`), ShouldEqual, "two\r\nline\r\nbreaks")
-			So(HTML2Text(`<p>two</p><p>paragraphs</p>`), ShouldEqual, "two\r\n\r\nparagraphs")
-		})
-
 	})
 }

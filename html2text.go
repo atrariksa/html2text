@@ -8,12 +8,12 @@ import (
 )
 
 const (
-	WIN_LBR  = "\r\n"
-	UNIX_LBR = "\n"
+	WIN_LBR  = ""
+	UNIX_LBR = ""
 )
 
 var lbr = WIN_LBR
-var badTagnamesRE = regexp.MustCompile(`^(head|script|style|a)($|\s*)`)
+var badTagnamesRE = regexp.MustCompile(`^(head|script|style)($|\s*)`)
 var linkTagRE = regexp.MustCompile(`a.*href=('([^']*?)'|"([^"]*?)")`)
 var badLinkHrefRE = regexp.MustCompile(`#|javascript:`)
 var headersRE = regexp.MustCompile(`^(\/)?h[1-6]`)
@@ -101,24 +101,27 @@ func writeSpace(outBuf *bytes.Buffer) {
 	}
 }
 
+func sReplacer(text string) string {
+	rsbt := regexp.MustCompile(`>\s+<`)
+	t := rsbt.ReplaceAllString(text, "><")
+	re := regexp.MustCompile(`\x{000D}\x{000A}|[\x{000A}\x{000B}\x{000C}\x{000D}\x{0085}\x{2028}\x{2029}]`)
+	t = re.ReplaceAllString(t, "")
+	var r = strings.NewReplacer("\t", "", "\f", "")
+	t = r.Replace(t)
+	return t
+}
+
 // HTML2Text converts html into a text form
 func HTML2Text(html string) string {
-	inLen := len(html)
+	html = sReplacer(html)
 	tagStart := 0
 	inEnt := false
 	badTagStackDepth := 0 // if == 1 it means we are inside <head>...</head>
 	shouldOutput := true
-	// new line cannot be printed at the beginning or
-	// for <p> after a new line created by previous <p></p>
-	canPrintNewline := false
 
 	outBuf := bytes.NewBufferString("")
 
 	for i, r := range html {
-		if inLen > 0 && i == inLen-1 {
-			// prevent new line at the end of the document
-			canPrintNewline = false
-		}
 
 		switch {
 		// skip new lines and spaces adding a single space if not there yet
@@ -174,36 +177,19 @@ func HTML2Text(html string) string {
 			if tagNameLowercase == "/ul" {
 				outBuf.WriteString(lbr)
 			} else if tagNameLowercase == "li" || tagNameLowercase == "li/" {
-				outBuf.WriteString(lbr)
+				outBuf.WriteString(" ")
 			} else if headersRE.MatchString(tagNameLowercase) {
-				if canPrintNewline {
-					outBuf.WriteString(lbr + lbr)
-				}
-				canPrintNewline = false
+				outBuf.WriteString(" ")
 			} else if tagNameLowercase == "br" || tagNameLowercase == "br/" {
 				// new line
 				outBuf.WriteString(lbr)
-			} else if tagNameLowercase == "p" || tagNameLowercase == "/p" {
-				if canPrintNewline {
-					outBuf.WriteString(lbr + lbr)
-				}
-				canPrintNewline = false
+			} else if tagNameLowercase == "p" {
+				outBuf.WriteString(lbr + lbr)
+			} else if tagNameLowercase == "/p" {
+				outBuf.WriteString(" ")
 			} else if badTagnamesRE.MatchString(tagNameLowercase) {
 				// unwanted block
 				badTagStackDepth++
-
-				// parse link href
-				m := linkTagRE.FindStringSubmatch(tag)
-				if len(m) == 4 {
-					link := m[2]
-					if len(link) == 0 {
-						link = m[3]
-					}
-
-					if !badLinkHrefRE.MatchString(link) {
-						outBuf.WriteString(HTMLEntitiesToText(link))
-					}
-				}
 			} else if len(tagNameLowercase) > 0 && tagNameLowercase[0] == '/' &&
 				badTagnamesRE.MatchString(tagNameLowercase[1:]) {
 				// end of unwanted block
@@ -214,10 +200,11 @@ func HTML2Text(html string) string {
 		} // switch end
 
 		if shouldOutput && badTagStackDepth == 0 && !inEnt {
-			canPrintNewline = true
 			outBuf.WriteRune(r)
 		}
 	}
 
-	return outBuf.String()
+	tOut := outBuf.String()
+	tOut = strings.TrimSpace(tOut)
+	return tOut
 }
