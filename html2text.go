@@ -175,18 +175,16 @@ func HTML2Text(html string) string {
 			tagNameLowercase := strings.ToLower(tag)
 
 			if tagNameLowercase == "/ul" {
-				outBuf.WriteString(lbr)
+				writeSpace(outBuf)
 			} else if tagNameLowercase == "li" || tagNameLowercase == "li/" {
-				outBuf.WriteString(" ")
+				writeSpace(outBuf)
 			} else if headersRE.MatchString(tagNameLowercase) {
-				outBuf.WriteString(" ")
+				writeSpace(outBuf)
 			} else if tagNameLowercase == "br" || tagNameLowercase == "br/" {
 				// new line
-				outBuf.WriteString(lbr)
-			} else if tagNameLowercase == "p" {
-				outBuf.WriteString(lbr + lbr)
-			} else if tagNameLowercase == "/p" {
-				outBuf.WriteString(" ")
+				writeSpace(outBuf)
+			} else if tagNameLowercase == "p" || tagNameLowercase == "/p" {
+				writeSpace(outBuf)
 			} else if badTagnamesRE.MatchString(tagNameLowercase) {
 				// unwanted block
 				badTagStackDepth++
